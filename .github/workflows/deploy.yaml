@@ -9,14 +9,12 @@ on:
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-  ZIP_DOWNLOAD_LOCATION: ${{ secrets.ZIP_DOWNLOAD_LOCATION }}
-  UNZIPPED_FOLDER_NAME: ${{ secrets.UNZIPPED_FOLDER_NAME }}
-  DESTINATION: ${{ secrets.DESTINATION }}
-  IIS_FOLDER: ${{ secrets.IIS_FOLDER }}
+ 
   
 jobs:
       build:
            runs-on: windows-latest
+           environment: master
            defaults:
              run:
                shell: cmd
@@ -58,13 +56,20 @@ jobs:
               run: |
                 aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/web-app/
                 aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/web-app/
+
       deploy:
        needs: build
        runs-on: [ self-hosted, Windows, X64 ]
+       environment: master
        defaults:
          run:
            shell: cmd
-    
+       env:
+         ZIP_DOWNLOAD_LOCATION: ${{ secrets.ZIP_DOWNLOAD_LOCATION }}
+         DESTINATION: ${{ secrets.DESTINATION }}
+         IIS_FOLDER: ${{ secrets.IIS_FOLDER }}
+         COPY_LOCATION: ${{ secrets.COPY_LOCATION }}
+            
        steps:
            - name: Set AWS credentials
              uses: aws-actions/configure-aws-credentials@v1
@@ -102,8 +107,8 @@ jobs:
         
            - name: Deploy to IIS Server
              shell: powershell
-             env:
-               COPY_LOCATION: ${{ secrets.COPY_LOCATION }}
+            #  env:
+            #    COPY_LOCATION: ${{ secrets.COPY_LOCATION }}
              run: |
                iisreset /stop
                Remove-Item ${{ env.IIS_FOLDER }}\*  -Recurse
