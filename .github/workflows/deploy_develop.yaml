@@ -109,6 +109,7 @@ jobs:
              shell: powershell
              run: |
                iisreset /stop
+               Remove-Item ${{ env.IIS_FOLDER }}\*  -Recurse
                Copy-Item -Path ${{ env.COPY_LOCATION }}\* -Destination ${{ env.IIS_FOLDER }} -Recurse -Force
                iisreset /start
           
@@ -129,4 +130,4 @@ jobs:
              shell: powershell
              run: |
                C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt    
-               Remove-Item C:\actions-runner\_work\develop\commit_sha.txt
+              #  Remove-Item C:\actions-runner\_work\develop\commit_sha.txt
