@@ -3,9 +3,9 @@ name: "Deploying a CI/CD for .NET sample app in ASP.NET 4.7 using GitHub Actions
 on:
   workflow_dispatch:
   push:
-    branches: [ "master" ]
+    branches: [ "develop" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "develop" ]
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
@@ -14,7 +14,7 @@ env:
 jobs:
       build:
            runs-on: windows-latest
-           environment: master
+           environment: develop
            defaults:
              run:
                shell: cmd
@@ -54,13 +54,13 @@ jobs:
               env:
                 BUILD: ${{ secrets.BUILD }}
               run: |
-                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/web-app/
-                aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/web-app/
+                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/
+                aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/
 
       deploy:
        needs: build
        runs-on: [ self-hosted, Windows, X64 ]
-       environment: master
+       environment: develop
        defaults:
          run:
            shell: cmd
@@ -99,7 +99,7 @@ jobs:
                
            - name: Download the zip file from S3 to EC2 folder
              shell: powershell
-             run: aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/web-app/HelloWorldSampleApp.zip ${{ env.ZIP_DOWNLOAD_LOCATION }}
+             run: aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip ${{ env.ZIP_DOWNLOAD_LOCATION }}
                 
            - name: Unzipping the Zip file
              shell: powershell
@@ -117,9 +117,9 @@ jobs:
            - name: Download the Commit SHA file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
              shell: powershell
              run: |
-              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/web-app/commit_sha.txt C:\actions-runner\_work
+              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt C:\actions-runner\_work
               $output = cat C:\actions-runner\_work\commit_sha.txt
-              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/web-app/HelloWorldSampleApp-$output.zip
+              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp-$output.zip
                 
            - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
              shell: powershell
