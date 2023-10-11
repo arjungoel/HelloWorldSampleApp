@@ -117,18 +117,18 @@ jobs:
            - name: Download the Commit SHA file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
              shell: powershell
              run: |
-              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt C:\actions-runner\_work
-              $output = cat C:\actions-runner\_work\commit_sha.txt
+              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt C:\actions-runner\_work\develop\
+              $output = cat C:\actions-runner\_work\develop\commit_sha.txt
               C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp-$output.zip
                 
            - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
              shell: powershell
              run: |
                Remove-Item ${{ env.DESTINATION }} -Recurse
-               Remove-Item C:\actions-runner\_work\HelloWorldSampleApp.zip
+               Remove-Item C:\actions-runner\_work\develop\HelloWorldSampleApp.zip
             
            - name: Delete the Commit SHA file from S3 bucket and EC2 location 
              shell: powershell
              run: |
-               C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/web-app/commit_sha.txt    
-               Remove-Item C:\actions-runner\_work\commit_sha.txt
+               C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt    
+               Remove-Item C:\actions-runner\_work\develop\commit_sha.txt
