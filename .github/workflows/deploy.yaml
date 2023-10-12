@@ -70,7 +70,8 @@ jobs:
          RUNNER_WORK_LOCATION: ${{ secrets.RUNNER_WORK_LOCATION }}
          DESTINATION: ${{ secrets.DESTINATION }}
          IIS_FOLDER: ${{ secrets.IIS_FOLDER }}
-         COPY_LOCATION: ${{ secrets.COPY_LOCATION }}
+         FOLDER_NAME: ${{ secrets.FOLDER_NAME }}
+         EXTRACTED_ZIP_LOCATION: ${{ secrets.EXTRACTED_ZIP_LOCATION }}
             
        steps:
            - name: Set AWS credentials
