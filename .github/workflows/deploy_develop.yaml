@@ -1,4 +1,4 @@
-name: "Deploying a CI/CD for .NET sample app in ASP.NET 4.7 using GitHub Actions and store artifacts in Amazon S3 for Develop"
+name: "Deploying a CI/CD for .NET sample app in ASP.NET 4.7 using GitHub Actions and store artifacts in Amazon S3 for Develop branch"
 
 on:
   workflow_dispatch:
@@ -8,7 +8,8 @@ on:
     branches: [ "develop" ]
 
 env:
-  S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+  S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }} 
+  FOLDER_NAME: ${{ secrets.FOLDER_NAME }}
  
   
 jobs:
@@ -54,8 +55,8 @@ jobs:
               env:
                 BUILD: ${{ secrets.BUILD }}
               run: |
-                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/
-                aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/
+                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
+                aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
 
       deploy:
        needs: build
@@ -65,10 +66,11 @@ jobs:
          run:
            shell: cmd
        env:
-         ZIP_DOWNLOAD_LOCATION: ${{ secrets.ZIP_DOWNLOAD_LOCATION }}
+         RUNNER_WORK_LOCATION: ${{ secrets.RUNNER_WORK_LOCATION }}
          DESTINATION: ${{ secrets.DESTINATION }}
          IIS_FOLDER: ${{ secrets.IIS_FOLDER }}
-         COPY_LOCATION: ${{ secrets.COPY_LOCATION }}
+         EXTRACTED_ZIP_LOCATION: ${{ secrets.EXTRACTED_ZIP_LOCATION }}
+         FOLDER_NAME: ${{ secrets.FOLDER_NAME }}
             
        steps:
            - name: Set AWS credentials
@@ -99,35 +101,35 @@ jobs:
                
            - name: Download the zip file from S3 to EC2 folder
              shell: powershell
-             run: aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip ${{ env.ZIP_DOWNLOAD_LOCATION }}
+             run: aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/HelloWorldSampleApp.zip ${{ env.RUNNER_WORK_LOCATION }}
                 
            - name: Unzipping the Zip file
              shell: powershell
-             run: Expand-Archive -Path ${{ env.ZIP_DOWNLOAD_LOCATION }}\HelloWorldSampleApp.zip -DestinationPath ${{ env.DESTINATION }}
+             run: Expand-Archive -Path ${{ env.RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip -DestinationPath ${{ env.DESTINATION }}\output
         
            - name: Deploy to IIS Server
              shell: powershell
              run: |
                iisreset /stop
                Remove-Item ${{ env.IIS_FOLDER }}\*  -Recurse
-               Copy-Item -Path ${{ env.COPY_LOCATION }}\* -Destination ${{ env.IIS_FOLDER }} -Recurse -Force
+               Copy-Item -Path "${{ env.RUNNER_WORK_LOCATION }}\output\${{ env.EXTRACTED_ZIP_LOCATION }}\*" -Destination ${{ env.IIS_FOLDER }} -Recurse -Force
                iisreset /start
           
-           - name: Download the Commit SHA file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
-             shell: powershell
-             run: |
-              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt C:\actions-runner\_work\develop\
-              $output = cat C:\actions-runner\_work\develop\commit_sha.txt
-              C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp-$output.zip
+          #  - name: Download the Commit SHA file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
+          #    shell: powershell
+          #    run: |
+          #     C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt C:\actions-runner\_work\develop\
+          #     $output = cat C:\actions-runner\_work\develop\commit_sha.txt
+          #     C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/HelloWorldSampleApp-$output.zip
                 
-           - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
-             shell: powershell
-             run: |
-               Remove-Item ${{ env.DESTINATION }} -Recurse
+          #  - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
+          #    shell: powershell
+          #    run: |
+          #      Remove-Item ${{ env.DESTINATION }} -Recurse
               #  Remove-Item C:\actions-runner\_work\develop\HelloWorldSampleApp.zip
             
-           - name: Delete the Commit SHA file from S3 bucket and EC2 location 
-             shell: powershell
-             run: |
-               C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt    
+          #  - name: Delete the Commit SHA file from S3 bucket and EC2 location 
+          #    shell: powershell
+          #    run: |
+          #      C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/develop/web-app/commit_sha.txt    
               #  Remove-Item C:\actions-runner\_work\develop\commit_sha.txt
