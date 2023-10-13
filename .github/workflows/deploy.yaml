@@ -3,9 +3,9 @@ name: "Deploying a CI/CD for .NET sample app in ASP.NET 4.7 using GitHub Actions
 on:
   workflow_dispatch:
   push:
-    branches: [ "master", "develop" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "master", "develop" ]
+    branches: [ "master" ]
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
