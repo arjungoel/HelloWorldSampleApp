@@ -1,4 +1,4 @@
-name: "Deploying a CI/CD for .NET Hello World Sample App in ASP.NET 4.7 using GitHub Actions and store artifacts in Amazon S3 for Develop branch"
+name: "Deploying a CI/CD for .NET Hello World App in ASP.NET 4.7 using GitHub Actions and store artifacts in Amazon S3 for Develop branch"
 
 on:
   workflow_dispatch:
