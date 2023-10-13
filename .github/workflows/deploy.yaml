@@ -3,7 +3,7 @@ name: "Deploying a CI/CD for .NET Hello World Sample App in ASP.NET 4.7 using Gi
 on:
   workflow_dispatch:
   push:
-    branches: [ "master" ]
+    branches: [ "**" ]
   pull_request:
     branches: [ "master"]
 
