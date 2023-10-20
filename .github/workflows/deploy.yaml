@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  # pull_request:
+  #   branches: [ "master" ]
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
@@ -96,8 +96,8 @@ jobs:
            - name: Check the AWS CLI version V2
              shell: cmd
              run: |
-              cd C:\
-              aws --version
+               cd C:\
+               aws --version
                
            - name: Download the zip file from S3 to EC2 folder
              shell: powershell
