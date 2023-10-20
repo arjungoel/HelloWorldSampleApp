@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ "develop" ]
-  pull_request:
-    branches: [ "develop" ]
+  # pull_request:
+  #   branches: [ "develop" ]
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }} 
