@@ -41,6 +41,8 @@ jobs:
 
             - name: Build semantic release using GIT Tags and Semantic Versioning
               run: |
+                git config --global user.name "Arjun Goel"
+                git config --global user.email "arjungoel1995@gmail.com"
                 git tag -a v1.0.0 -m "release 1.0.0"
               
             - name: Set AWS credentials
