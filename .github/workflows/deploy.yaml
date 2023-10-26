@@ -38,6 +38,10 @@ jobs:
 
             - name: Build solution
               run: msbuild HelloWorldSampleApp.sln /p:Configuration=Release /p:DeployOnBuild=true
+
+            - name: Build semantic release using GIT Tags and Semantic Versioning
+              run: |
+                git tag -a v1.0.0 -m "release 1.0.0"
               
             - name: Set AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
