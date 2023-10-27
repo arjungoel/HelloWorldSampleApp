@@ -49,11 +49,14 @@ jobs:
             #     git push origin v1.0.0
 
           # Auto Generate Next Release Tag
+            # - name: Bump version and push tag
+            #   uses: ChloePlanet/github-tag-action@master
+            #   env:
+            #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            #     WITH_V: true
+
             - name: Bump version and push tag
-              uses: ChloePlanet/github-tag-action@master
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                WITH_V: true
+              run: bash .\tag_release.sh
       
             - name: Set AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
