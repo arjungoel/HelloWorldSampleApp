@@ -123,7 +123,7 @@ REPO_DIR=$(echo $(git rev-parse --show-toplevel))
 cd "${REPO_DIR}"
 
 # Get current active branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
 # Switch to production branch
 if [ $CURRENT_BRANCH != "$BRANCH" ]; then
     conditional_echo "- Switching from $CURRENT_BRANCH to $BRANCH branch. (stashing any local change)"
