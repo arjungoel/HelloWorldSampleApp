@@ -56,7 +56,10 @@ jobs:
             #     WITH_V: true
 
             - name: Bump version and push tag
-              run: bash .\tag_release.sh
+              run: |
+                git config --global user.name "Arjun Goel"
+                git config --global user.email "arjungoel1995@gmail.com"
+                bash .\tag_release.sh
       
             - name: Set AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
