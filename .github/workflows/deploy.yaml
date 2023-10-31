@@ -59,7 +59,7 @@ jobs:
               run: |
                 git config --global user.name "Arjun Goel"
                 git config --global user.email "arjungoel1995@gmail.com"
-                bash .\tag_release.sh -t minor
+                bash .\tag_release.sh -t major
       
             - name: Set AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
