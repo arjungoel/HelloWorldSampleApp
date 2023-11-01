@@ -60,9 +60,9 @@ jobs:
               run: |
                 git config --global user.name "Arjun Goel"
                 git config --global user.email "arjungoel1995@gmail.com"
-                $output = bash .\tag_release.sh
-                echo $output
-                echo $output > release.txt
+                output=$(bash .\tag_release.sh)
+                echo "$output"
+                echo "$output" > release.txt
       
             - name: Set AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
@@ -82,10 +82,8 @@ jobs:
               shell: powershell
               run: |
                 aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
-                aws s3 cp commit_sha.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
-                aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/HelloWorldSampleApp-$output.zip
-                
-
+                aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
+          
       # deploy-to-master:
       #  needs: build-for-master
       #  runs-on: [ self-hosted, Windows, X64 ]
