@@ -179,6 +179,10 @@ if [ -z "$NEEDSTAG" ]; then
     else
         # Assume TAGTYPE = "patch"
         VNUM3=$((VNUM3+1))
+        if [ "$VNUM3" -gt 9 ]; then
+            VNUM2=$((VNUM2 + 1))
+            VNUM3=0
+        fi
     fi
 
     # Create new tag number
