@@ -61,10 +61,10 @@ jobs:
                 git config --global user.name "Arjun Goel"
                 git config --global user.email "arjungoel1995@gmail.com"
                 $output = bash tag_release.sh
-                $textFilePath = "$output"
-                $text = Get-Content $textFilePath -Raw
-                $releaseNumber = [regex]::Match($text, "-- Release number: (.+)").Groups[1].Value
-                echo $releaseNumber > release.txt
+
+                Set-Content -Path "release.txt" -Value $output
+                $releaseNumber = [regex]::Match($output, "-- Release number: (.+)").Groups[1].Value
+                echo "Release Number: $releaseNumber"
                 
       
             - name: Set AWS credentials
