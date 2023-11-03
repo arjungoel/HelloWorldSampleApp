@@ -21,7 +21,7 @@ jobs:
 
            env:
             BUILD: ${{ secrets.BUILD }}
-            S3_FOLDER: ${{ vars.FOLDER_NAME }}
+            S3_FOLDER: ${{ vars.S3_FOLDER }}
 
            steps:
             - name: Checkout code repository
