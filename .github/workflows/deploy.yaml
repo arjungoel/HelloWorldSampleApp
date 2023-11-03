@@ -81,8 +81,8 @@ jobs:
             - name: Upload artifacts to Amazon S3
               shell: powershell
               run: |
-                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ vars.FOLDER_NAME }}/web-app/
-                aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ vars.FOLDER_NAME }}/web-app/
+                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
+                aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
           
       # deploy-to-master:
       #  needs: build-for-master
