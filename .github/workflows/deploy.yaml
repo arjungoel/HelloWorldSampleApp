@@ -29,17 +29,21 @@ jobs:
               with:
                 fetch-depth: '0'
                 
-            - name: Setup MSBuild
-              uses: microsoft/setup-msbuild@v1
+            - name: Echo folder name
+              shell: powershell
+              run: echo "$FOLDER_NAME"
+                
+            # - name: Setup MSBuild
+            #   uses: microsoft/setup-msbuild@v1
 
-            - name: Setup NuGet
-              uses: NuGet/setup-nuget@v1.0.5
+            # - name: Setup NuGet
+            #   uses: NuGet/setup-nuget@v1.0.5
 
-            - name: Restore Packages
-              run: nuget restore HelloWorldSampleApp.sln
+            # - name: Restore Packages
+            #   run: nuget restore HelloWorldSampleApp.sln
 
-            - name: Build solution
-              run: msbuild HelloWorldSampleApp.sln /p:Configuration=Release /p:DeployOnBuild=true
+            # - name: Build solution
+            #   run: msbuild HelloWorldSampleApp.sln /p:Configuration=Release /p:DeployOnBuild=true
 
             # - name: Build semantic release using GIT Tags and Semantic Versioning
             #   run: |
@@ -55,21 +59,21 @@ jobs:
             #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             #     WITH_V: true
 
-            - name: Bump version and push tag
-              shell: powershell
-              run: |
-                git config --global user.name "Arjun Goel"
-                git config --global user.email "arjungoel1995@gmail.com"
-                $releaseNumber = [regex]::Match((bash tag_release.sh), "-- Release number: (.+)").Groups[1].Value
-                $releaseNumber > release.txt
-                echo $releaseNumber
+            # - name: Bump version and push tag
+            #   shell: powershell
+            #   run: |
+            #     git config --global user.name "Arjun Goel"
+            #     git config --global user.email "arjungoel1995@gmail.com"
+            #     $releaseNumber = [regex]::Match((bash tag_release.sh), "-- Release number: (.+)").Groups[1].Value
+            #     $releaseNumber > release.txt
+            #     echo $releaseNumber
                 
-            - name: Set AWS credentials
-              uses: aws-actions/configure-aws-credentials@v1
-              with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws-region: ${{ secrets.AWS_REGION }}
+            # - name: Set AWS credentials
+            #   uses: aws-actions/configure-aws-credentials@v1
+            #   with:
+            #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+            #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            #     aws-region: ${{ secrets.AWS_REGION }}
             
             # - name: Retrieve Commit SHA for the build
             #   shell: powershell
@@ -78,11 +82,11 @@ jobs:
             #     echo $output
             #     echo $output > commit_sha.txt
                 
-            - name: Upload artifacts to Amazon S3
-              shell: powershell
-              run: |
-                aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
-                aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
+            # - name: Upload artifacts to Amazon S3
+            #   shell: powershell
+            #   run: |
+            #     aws s3 cp ${{ env.BUILD }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
+            #     aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.FOLDER_NAME }}/web-app/
           
       # deploy-to-master:
       #  needs: build-for-master
