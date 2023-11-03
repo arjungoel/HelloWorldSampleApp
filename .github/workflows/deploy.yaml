@@ -21,7 +21,7 @@ jobs:
 
            env:
             BUILD: ${{ secrets.BUILD }}
-            # FOLDER_NAME: ${{ vars.FOLDER_NAME }}
+            FOLDER_NAME: ${{ vars.FOLDER_NAME }}
 
            steps:
             - name: Checkout code repository
