@@ -21,7 +21,7 @@ jobs:
 
            env:
             BUILD: ${{ secrets.BUILD }}
-            FOLDER_NAME: ${{ env.FOLDER_NAME }}
+            S3_FOLDER: ${{ vars.FOLDER_NAME }}
 
            steps:
             - name: Checkout code repository
@@ -31,7 +31,7 @@ jobs:
                 
             - name: Echo folder name
               shell: powershell
-              run: echo "$env:FOLDER_NAME"
+              run: echo "$S3_FOLDER"
                 
             # - name: Setup MSBuild
             #   uses: microsoft/setup-msbuild@v1
