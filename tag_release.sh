@@ -1,68 +1,69 @@
 #!/bin/bash
+
 ARGUMENTS="$@"
 BRANCH="main"
+BRANCHES=("main" "main_jk_anvil" "main_jk_techno" "main_anvil" "main_apraava" "main_intelli" "develop")
 DRYRUN="0"
 GITPARAMS=()
 RELEASEDATE=$(date '+%Y%m%d')
 RELEASENOTES=""
 REMOTE="origin"
 PREVIOUS_COMMIT=""
-RUNSILENT="0"
+RUNQUIET="0"
 VERBOSE="0"
 VERSIONTYPE="patch"
-
 
 # Function to return help text when requested with -h option.
 help() {
     # Display help.
     echo
-    echo "Generates, increments and pushes an annotated semantic version tag for current git repository."
+    echo "Generates, increments and pushes an annotated semantic version tag for the current git repository."
     echo
     echo "Usage:"
     echo "  sh tag-release [-b|--branch] [-d|--date] [-h|--help] [-m|--message] [-p|--previous] [-r|--remote] [-v|--version-type]"
     echo
     echo "Options:"
     echo "-b,--branch <branch>"
-    echo "      Branch to generate release tag on."
-    echo "      If ommited, defaults to '$BRANCH'"
+    echo "      Branch to generate a release tag on."
+    echo "      If omitted, defaults to '$BRANCH'"
     echo
     echo "-d,--date <date>"
-    echo "      Date string to specify when release was created."
-    echo "      If ommited, defaults to %Y%m%d of current date."
+    echo "      Date string to specify when the release was created."
+    echo "      If omitted, defaults to %Y%m%d of the current date."
     echo
     echo "-h,--help, help"
     echo "      Prints this help."
     echo
     echo "-m,--message <message>"
-    echo "      Message to use to annotate release."
-    echo "      If ommited a list of non-merge commit messages will be compiled as release annotation."
-    echo "      If ommited and -p <commit> is given, will compile a list of non-merge commit messages between <commit> and HEAD."
-    echo "      If ommited and -p is not given, will compile a list of non-merge commit messages between last found release and HEAD."
+    echo "      Message to use to annotate the release."
+    echo "      If omitted, a list of non-merge commit messages will be compiled as the release annotation."
+    echo "      If omitted and -p <commit> is given, it will compile a list of non-merge commit messages between <commit> and HEAD."
+    echo "      If omitted and -p is not given, it will compile a list of non-merge commit messages between the last found release and HEAD."
     echo
     echo "-n,--dry-run"
     echo "      Do everything except actually send the updates."
-    echo "      If -q is also given then only error messages will be output."
+    echo "      If -q is also given, then only error messages will be output."
     echo
     echo "-p,--previous <commit>"
     echo "      Previous commit to use to generate release notes."
-    echo "      If ommited, will attempt to get commit hash of last release tag."
+    echo "      If omitted, it will attempt to get the commit hash of the last release tag."
     echo
     echo "-q,--quiet"
-    echo "      Supress all output, unless an error occurs."
+    echo "      Suppress all output unless an error occurs."
     echo
     echo "-r,--remote <remote>"
-    echo "      Name of remote to use for pushing."
-    echo "      If ommited, defaults to '$REMOTE'"
+    echo "      Name of the remote to use for pushing."
+    echo "      If omitted, defaults to '$REMOTE'"
     echo
     echo "-t,--version-type [major|minor|patch]"
-    echo "      Type of semantic version to create. Valid options are 'major', 'minor' or 'patch'"
-    echo "          major: Will bump up to next major release (i.e 1.0.0 -> 2.0.0)"
-    echo "          minor: Will bump up to next minor release (i.e 1.0.1 -> 1.1.0)"
-    echo "          patch: Will bump up to next patch release (i.e 1.0.2 -> 1.0.3)"
-    echo "      If ommited, will default to '$VERSIONTYPE'"
+    echo "      Type of semantic version to create. Valid options are 'major', 'minor', or 'patch'"
+    echo "          major: Will bump up to the next major release (i.e., 1.0.0 -> 2.0.0)"
+    echo "          minor: Will bump up to the next minor release (i.e., 1.0.1 -> 1.1.0)"
+    echo "          patch: Will bump up to the next patch release (i.e., 1.0.2 -> 1.0.3)"
+    echo "      If omitted, will default to '$VERSIONTYPE'"
     echo
     echo "-v,--verbose"
-    echo "      Run verbosley."
+    echo "      Run verbosely."
     echo
 }
 
@@ -72,78 +73,83 @@ conditional_echo() {
     fi
 }
 
-while [[ "$#" -gt 0 ]]
-do
+while [[ "$#" -gt 0 ]]; do
     case $1 in
-      -b|--branch)
-        BRANCH=$2
-        ;;
-      -d|--date)
-        RELEASEDATE=$2
-        ;;
-      -h|--help|help)
-        help
-        exit
-        ;;
-      -m|--message)
-        RELEASENOTES=$2
-        ;;
-      -n|--dry-run)
-        DRYRUN="1"
-        ;;
-      -p|--previous)
-        PREVIOUS_COMMIT=$2
-        ;;
-      -r|--remote)
-        REMOTE=$2
-        ;;
-      -t|--type)
-        VERSIONTYPE=$2
-        ;;
-      -q|--quiet)
-        RUNQUIET="1"
-        GITPARAMS+=(--dry-run)
-        ;;
-      -v|--verbose)
-        # See if a second argument is passed, due to argument reassignment to -v.
-        if [[ "$1" == "-v" ]] && [[ -n "$2" ]]; then
-            echo "ERROR: Unsupported value \"$2\" passed to -v argument. If trying to set semantic version tag, use the -t or --type argument".
+        -b|--branch)
+            BRANCH=$2
+            ;;
+        -d|--date)
+            RELEASEDATE=$2
+            ;;
+        -h|--help|help)
+            help
             exit
-        fi
-        VERBOSE="1"
-        GITPARAMS+=(--verbose)
-        ;;
+            ;;
+        -m|--message)
+            RELEASENOTES=$2
+            ;;
+        -n|--dry-run)
+            DRYRUN="1"
+            ;;
+        -p|--previous)
+            PREVIOUS_COMMIT=$2
+            ;;
+        -r|--remote)
+            REMOTE=$2
+            ;;
+        -t|--type)
+            VERSIONTYPE=$2
+            ;;
+        -q|--quiet)
+            RUNQUIET="1"
+            GITPARAMS+=(--dry-run)
+            ;;
+        -v|--verbose)
+            # See if a second argument is passed, due to argument reassignment to -v.
+            if [[ "$1" == "-v" ]] && [[ -n "$2" ]]; then
+                echo "ERROR: Unsupported value \"$2\" passed to -v argument. If trying to set a semantic version tag, use the -t or --type argument".
+                exit
+            fi
+            VERBOSE="1"
+            GITPARAMS+=(--verbose)
+            ;;
     esac
     shift
 done
 
-# Get top-level of git repo.
-REPO_DIR=$(echo $(git rev-parse --show-toplevel))
+# Get the top level of the git repo.
+REPO_DIR=$(git rev-parse --show-toplevel)
 # CD into the top level
 cd "${REPO_DIR}"
 
-# Get current active branch
+# Get the current active branch
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-# Switch to production branch
-if [ $CURRENT_BRANCH != "$BRANCH" ]; then
+# Switch to the production branch
+if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
     conditional_echo "- Switching from $CURRENT_BRANCH to $BRANCH branch. (stashing any local change)"
+
+    # Print the branch name and version number
+    if [[ " ${BRANCHES[@]} " =~ " $BRANCH " ]]; then
+        echo "- Switching to $BRANCH branch with version number: $(git describe --tags)"
+    fi
+
     # stash any current work
-    git stash "${GITPARAMS[@]}"
+    git stash save "${GITPARAMS[@]}"
     # go to the production branch
     git checkout $BRANCH "${GITPARAMS[@]}"
 fi
 
 conditional_echo "- Updating local $BRANCH branch."
-# pull latest version of production branch
+# pull the latest version of the production branch
 git pull $REMOTE $BRANCH "${GITPARAMS[@]}"
-# fetch remote, to get latest tags
+# fetch the remote to get the latest tags
 git fetch $REMOTE "${GITPARAMS[@]}"
 
-# Get previous release tags
-conditional_echo "- Getting previous tag."
-PREVIOUS_TAG=$(echo $(git ls-remote --tags --ref --sort="v:refname" $REMOTE | tail -n1))
+# Get the previous release tags
+conditional_echo "- Getting the previous tag."
+PREVIOUS_TAG=$(git ls-remote --tags --ref --sort="v:refname" $REMOTE | tail -n1)
 
-# If specific commit not set, get the from the previous release.
+# If a specific commit is not set, get it from the previous release.
 if [ -z "$PREVIOUS_COMMIT" ]; then
     # Split on the first space
     PREVIOUS_COMMIT=$(echo $PREVIOUS_TAG | cut -d' ' -f 1)
@@ -151,24 +157,24 @@ fi
 
 conditional_echo "-- PREVIOUS TAG: $PREVIOUS_TAG"
 
-# Get previous release number
+# Get the previous release number
 PREVIOUS_RELEASE=$(echo $PREVIOUS_TAG | cut -d'/' -f 3 | cut -d'v' -f2 )
 
-conditional_echo "- Creating release tag"
-# Get last commit
-LASTCOMMIT=$(echo $(git rev-parse $REMOTE/$BRANCH))
-# Check if commit already has a tag
-NEEDSTAG=$(echo $(git describe --contains $LASTCOMMIT 2>/dev/null))
+conditional_echo "- Creating the release tag"
+# Get the last commit
+LASTCOMMIT=$(git rev-parse $REMOTE/$BRANCH)
+# Check if the commit already has a tag
+NEEDSTAG=$(git describe --contains $LASTCOMMIT 2>/dev/null)
 
 if [ -z "$NEEDSTAG" ]; then
-    conditional_echo "-- Generating release number ($VERSIONTYPE)"
-    # Replace . with spaces so that can split into an array.
+    conditional_echo "-- Generating the release number ($VERSIONTYPE)"
+    # Replace . with spaces so that it can split into an array.
     VERSION_BITS=(${PREVIOUS_RELEASE//./ })
     # Get number parts, only the digits.
     VNUM1=${VERSION_BITS[0]//[^0-9]/}
     VNUM2=${VERSION_BITS[1]//[^[0-9]/}
     VNUM3=${VERSION_BITS[2]//[^0-9]/}
-    # Update tagging number based on option that was passed.
+    # Update the tagging number based on the option that was passed.
     if [ "$VERSIONTYPE" == "major" ]; then
         VNUM1=$((VNUM1+1))
         VNUM2=0
@@ -185,24 +191,24 @@ if [ -z "$NEEDSTAG" ]; then
         fi
     fi
 
-    # Create new tag number
+    # Create a new tag number
     NEWTAG="v$VNUM1.$VNUM2.$VNUM3"
     conditional_echo "-- Release number: $NEWTAG"
-    # Check to see if new tag already exists
-    TAGEXISTS=$(echo $(git ls-remote --tags --ref $REMOTE | grep "$NEWTAG"))
+    # Check to see if the new tag already exists
+    TAGEXISTS=$(git ls-remote --tags --ref $REMOTE | grep "$NEWTAG")
 
     if [ -z "$TAGEXISTS" ]; then
         # Check if release notes were not provided.
         if [ -z "$RELEASENOTES" ]; then
-            conditional_echo "- Generating basic release notes of commits since last release."
+            conditional_echo "- Generating basic release notes of commits since the last release."
             # Generate a list of commit messages since the last release.
             RELEASENOTES=$(git log --pretty=format:"- %s" $PREVIOUS_COMMIT...$LASTCOMMIT  --no-merges)
         fi
         # Tag the commit.
         if [[ "$DRYRUN" -eq 0 ]]; then
-            conditional_echo "-- Tagging commit. ($LASTCOMMIT)"
+            conditional_echo "-- Tagging the commit. ($LASTCOMMIT)"
             git tag -a $NEWTAG -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $LASTCOMMIT
-            conditional_echo "- Pushing release to $REMOTE"
+            conditional_echo "- Pushing the release to $REMOTE"
             # Push up the tag
             git push $REMOTE $NEWTAG "${GITPARAMS[@]}"
         else
@@ -218,12 +224,14 @@ else
     exit 1
 fi
 
-# Switch to back to original branch
-if [ $CURRENT_BRANCH != "$BRANCH" ]; then
+# Switch back to the original branch
+if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
     conditional_echo "- Switching back to $CURRENT_BRANCH branch. (restoring local changes)"
-    git checkout "$CURRENT_BRANCH" "${GITPARAMS[@]}"
+    git checkout "$CURRENT_BRANCH" -- "${GITPARAMS[@]}"
+    # apply the stash
+    git stash apply "${GITPARAMS[@]}"
     # remove the stash
-    git stash pop "${GITPARAMS[@]}"
+    git stash drop "${GITPARAMS[@]}"
 fi
 
 exit 0
