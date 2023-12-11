@@ -81,7 +81,6 @@ jobs:
       FINAL_BUILD_PATH: ${{ vars.FINAL_BUILD_PATH }}
       ENVIRONMENT: ${{ vars.ENVIRONMENT }}
       MODE1: ${{ vars.MODE1 }}
-      MODE2: ${{ vars.MODE2 }}
             
     steps:
       - name: Set AWS credentials
@@ -177,6 +176,7 @@ jobs:
       IIS_FOLDER: ${{ vars.IIS_FOLDER }}
       FINAL_BUILD_PATH: ${{ vars.FINAL_BUILD_PATH }}
       ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      MODE2: ${{ vars.MODE2 }}
             
     steps:
       - name: Set AWS credentials
