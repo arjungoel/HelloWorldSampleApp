@@ -1,0 +1,255 @@
+name: "Deploying a CI/CD for .NET Hello World app in ASP.NET 4.7 using GitHub Actions and store artifacts in Amazon S3 for Production in Active/Passive mode"
+
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - '.github/workflows/deploy-active-passive.yaml'
+
+env:
+  S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }} 
+  GIT_CONFIG_EMAIL: ${{ secrets.GIT_CONFIG_EMAIL }}
+  GIT_CONFIG_USERNAME: ${{ secrets.GIT_CONFIG_USERNAME }}
+ 
+  
+jobs:
+  build:
+    runs-on: windows-latest
+    environment: production
+    defaults:
+      run:
+        shell: cmd
+        
+    env:
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      BUILD_PATH: ${{ vars.BUILD_PATH }}
+      MODE1: ${{ vars.MODE1 }}
+      MODE2: ${{ vars.MODE2 }}
+
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v3
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+
+      - name: Restore Packages
+        run: nuget restore HelloWorldSampleApp.sln
+
+      - name: Build solution
+        run: msbuild HelloWorldSampleApp.sln /p:Configuration=Release /p:DeployOnBuild=true
+     
+      - name: Determine next version v2
+        run: .\tag_release_main.ps1
+        shell: pwsh
+      
+      - name: Set AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+       
+      - name: Upload artifacts to Amazon S3
+        shell: powershell
+        run: |
+          aws s3 cp ${{ env.BUILD_PATH }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/
+          aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/
+          aws s3 cp ${{ env.BUILD_PATH }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/
+          aws s3 cp release.txt s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/
+
+
+  active-deploy:
+    needs: build
+    runs-on: [ self-hosted, Windows, X64, hello-world-sample-app ]
+    environment: production
+    defaults:
+      run:
+        shell: cmd
+    env:
+      SH_RUNNER_WORK_LOCATION: ${{ vars.SH_RUNNER_WORK_LOCATION }}
+      IIS_FOLDER: ${{ vars.IIS_FOLDER }}
+      FINAL_BUILD_PATH: ${{ vars.FINAL_BUILD_PATH }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+            
+    steps:
+      - name: Set AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Delete the zipped folder and unzipped folder if not deleted gracefully from the previous build run
+        shell: powershell
+        run: |
+          $folderPath = "${{ env.SH_RUNNER_WORK_LOCATION }}\output"
+          $testPath = Test-Path -Path $folderPath -PathType Container
+          $zipFilePath = "${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip"
+          $zipFileTestPath = Test-Path -Path $zipFilePath -PathType Leaf
+          if ($testPath -eq $true) {
+            takeown /F "$folderPath" /r /d y
+            icacls "$folderPath" /grant Administrators:F /t
+            Remove-Item -Path $folderPath -Recurse -Force -ErrorAction SilentlyContinue
+          } elseif ($zipFileTestPath -eq $true) {
+            Write-Output "File '$zipFilePath' exists. Removing..."
+            Remove-Item -Path $zipFilePath -Force
+            Write-Output "File removed successfully."
+          } else {
+            Write-Output "Neither unzipped folder nor zipped file found."
+          }
+    
+      - name: Download the zip file from S3 to EC2 folder
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
+
+      - name: Unzipping the Zip file
+        shell: powershell
+        run: Expand-Archive -Path ${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip -DestinationPath ${{ env.SH_RUNNER_WORK_LOCATION }}\output -Force
+    
+      # Deploy to IIS server
+      - name: Stop IIS Server
+        shell: powershell
+        run: iisreset /stop       
+    
+      - name: Delete the IIS folder
+        shell: powershell
+        run: |
+          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Container) {
+             Remove-Item "${{ env.IIS_FOLDER }}\hello-world-sample-app" -Recurse
+           } else {
+             Write-Host "The folder does not exist. No need to delete."
+           }
+    
+      - name: Copy files to wwwroot folder of IIS server
+        shell: powershell
+        run: |
+          $destinationFolder = "${{ env.IIS_FOLDER }}\hello-world-sample-app"
+          if (-Not (Test-Path -Path $destinationFolder -PathType Container)) {
+            New-Item -Path $destinationFolder -ItemType Directory
+          }
+          Remove-Item -Path $destinationFolder\* -Recurse -Force
+          Copy-Item -Path ${{ env.SH_RUNNER_WORK_LOCATION }}\output\${{ env.FINAL_BUILD_PATH }}\* -Destination $destinationFolder -Recurse -Force
+
+      - name: Start IIS Server
+        shell: powershell
+        run: iisreset /start
+
+      - name: Download the release.txt file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
+          $output = cat ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip s3://${{ env.AWS_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE1 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
+                
+      - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
+        shell: powershell
+        run: |
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\output -Recurse
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip
+            
+      - name: Delete the release.txt file from S3 bucket and EC2 instance location 
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt    
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
+               
+  passive-deploy:
+    needs: build
+    runs-on: [ self-hosted, Windows, X64, hello-world-sample-app-passive ]
+    environment: production
+    defaults:
+      run:
+        shell: cmd
+    env:
+      SH_RUNNER_WORK_LOCATION: ${{ vars.SH_RUNNER_WORK_LOCATION }}
+      IIS_FOLDER: ${{ vars.IIS_FOLDER }}
+      FINAL_BUILD_PATH: ${{ vars.FINAL_BUILD_PATH }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+            
+    steps:
+      - name: Set AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Delete the zipped folder and unzipped folder if not deleted gracefully from the previous build run
+        shell: powershell
+        run: |
+          $folderPath = "${{ env.SH_RUNNER_WORK_LOCATION }}\output"
+          $testPath = Test-Path -Path $folderPath -PathType Container
+          $zipFilePath = "${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip"
+          $zipFileTestPath = Test-Path -Path $zipFilePath -PathType Leaf
+          if ($testPath -eq $true) {
+            takeown /F "$folderPath" /r /d y
+            icacls "$folderPath" /grant Administrators:F /t
+            Remove-Item -Path $folderPath -Recurse -Force -ErrorAction SilentlyContinue
+          } elseif ($zipFileTestPath -eq $true) {
+            Write-Output "File '$zipFilePath' exists. Removing..."
+            Remove-Item -Path $zipFilePath -Force
+            Write-Output "File removed successfully."
+          } else {
+            Write-Output "Neither unzipped folder nor zipped file found."
+          }
+    
+      - name: Download the zip file from S3 to EC2 folder
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
+
+      - name: Unzipping the Zip file
+        shell: powershell
+        run: Expand-Archive -Path ${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip -DestinationPath ${{ env.SH_RUNNER_WORK_LOCATION }}\output -Force
+    
+      # Deploy to IIS server
+      - name: Stop IIS Server
+        shell: powershell
+        run: iisreset /stop       
+    
+      - name: Delete the IIS folder
+        shell: powershell
+        run: |
+          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Container) {
+             Remove-Item "${{ env.IIS_FOLDER }}\hello-world-sample-app" -Recurse
+           } else {
+             Write-Host "The folder does not exist. No need to delete."
+           }
+    
+      - name: Copy files to wwwroot folder of IIS server
+        shell: powershell
+        run: |
+          $destinationFolder = "${{ env.IIS_FOLDER }}\hello-world-sample-app"
+          if (-Not (Test-Path -Path $destinationFolder -PathType Container)) {
+            New-Item -Path $destinationFolder -ItemType Directory
+          }
+          Remove-Item -Path $destinationFolder\* -Recurse -Force
+          Copy-Item -Path ${{ env.SH_RUNNER_WORK_LOCATION }}\output\${{ env.FINAL_BUILD_PATH }}\* -Destination $destinationFolder -Recurse -Force
+
+      - name: Start IIS Server
+        shell: powershell
+        run: iisreset /start
+
+      - name: Download the release.txt file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
+          $output = cat ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip s3://${{ env.AWS_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE2 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
+                
+      - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
+        shell: powershell
+        run: |
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\output -Recurse
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip
+            
+      - name: Delete the release.txt file from S3 bucket and EC2 instance location 
+        shell: powershell
+        run: |
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt    
+          Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
