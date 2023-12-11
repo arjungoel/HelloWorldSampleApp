@@ -111,7 +111,7 @@ jobs:
       - name: Download the zip file from S3 to EC2 folder
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
 
       - name: Unzipping the Zip file
         shell: powershell
@@ -148,9 +148,9 @@ jobs:
       - name: Download the release.txt file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
           $output = cat ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip s3://${{ env.AWS_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE1 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE1 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
                 
       - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
         shell: powershell
@@ -161,7 +161,7 @@ jobs:
       - name: Delete the release.txt file from S3 bucket and EC2 instance location 
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt    
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/release.txt    
           Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
                
   passive-deploy:
@@ -207,7 +207,7 @@ jobs:
       - name: Download the zip file from S3 to EC2 folder
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
 
       - name: Unzipping the Zip file
         shell: powershell
@@ -244,9 +244,9 @@ jobs:
       - name: Download the release.txt file from S3 bucket to EC2 location and rename the artifacts file in S3 bucket
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt ${{ env.SH_RUNNER_WORK_LOCATION }}
           $output = cat ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip s3://${{ env.AWS_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE2 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 mv s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/HelloWorldSampleApp.zip s3://${{ env.S3_BUCKET_NAME  }}/${{ env.ENVIRONMENT }}/${{ env.MODE2 }}/hello-world-sample-app/HelloWorldSampleApp-$output.zip
                 
       - name: Delete the unzipped output folder & zipped file to allow new builds gracefully
         shell: powershell
@@ -257,5 +257,5 @@ jobs:
       - name: Delete the release.txt file from S3 bucket and EC2 instance location 
         shell: powershell
         run: |
-          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.AWS_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt    
+          C:\"Program Files"\Amazon\AWSCLIV2\aws s3 rm s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE2 }}/release.txt    
           Remove-Item ${{ env.SH_RUNNER_WORK_LOCATION }}\release.txt
