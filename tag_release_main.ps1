@@ -1,5 +1,6 @@
 New-Item -ItemType File -Path .\release.txt
 git fetch --tags
+$branchName = git branch --show-current
 $lastTagObj = git tag --sort=-creatordate | Where-Object { $_ -match 'v1\.\d+\.\d+-[A-Za-z0-9]+' } | Sort-Object | Select-Object -Last 1
 Write-Host "lastTagObj: $lastTagObj"
 $lastTag = "$lastTagObj"
@@ -18,7 +19,7 @@ $nextNumericTagVersion = [int]$numericTagVersion + 1
 Write-Host "nextNumericTagVersion: $nextNumericTagVersion"
 $finalTagVersion = $nextNumericTagVersion -replace '(\d)(?=(\d{1,2})+$)', '$1.'
 Write-Host "finalTagVersion: $finalTagVersion"
-$finalTagVersionName = "v" + $finalTagVersion + "-develop"
+$finalTagVersionName = "v" + $finalTagVersion + "-$branchName"
 Write-Host "finalTagVersionName: $finalTagVersionName"
 $finalTagVersionName | Out-File -FilePath "release.txt" -Encoding UTF8
 

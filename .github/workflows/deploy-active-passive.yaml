@@ -113,6 +113,7 @@ jobs:
         shell: powershell
         run: |
           C:\"Program Files"\Amazon\AWSCLIV2\aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.ENVIRONMENT }}/hello-world-sample-app/${{ env.MODE1 }}/HelloWorldSampleApp.zip ${{ env.SH_RUNNER_WORK_LOCATION }}
+      
       - name: Unzipping the Zip file
         shell: powershell
         run: Expand-Archive -Path ${{ env.SH_RUNNER_WORK_LOCATION }}\HelloWorldSampleApp.zip -DestinationPath ${{ env.SH_RUNNER_WORK_LOCATION }}\output -Force
