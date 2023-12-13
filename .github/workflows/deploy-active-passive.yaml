@@ -4,7 +4,7 @@ on:
   push:
     branches: [ develop ]
     paths:
-      - '.github/workflows/deploy-active-passive.yaml'
+      - .github/workflows/deploy-active-passive.yaml
 
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }} 
