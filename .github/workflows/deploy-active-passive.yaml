@@ -126,7 +126,7 @@ jobs:
       - name: Delete the IIS folder
         shell: powershell
         run: |
-          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Container) {
+          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Any) {
              Remove-Item "${{ env.IIS_FOLDER }}\hello-world-sample-app" -Recurse
            } else {
              Write-Host "The folder does not exist. No need to delete."
@@ -223,7 +223,7 @@ jobs:
       - name: Delete the IIS folder
         shell: powershell
         run: |
-          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Container) {
+          if (Test-Path -Path "${{ env.IIS_FOLDER }}\hello-world-sample-app" -PathType Any) {
              Remove-Item "${{ env.IIS_FOLDER }}\hello-world-sample-app" -Recurse
            } else {
              Write-Host "The folder does not exist. No need to delete."
