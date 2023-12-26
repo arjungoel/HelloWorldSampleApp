@@ -36,6 +36,17 @@ jobs:
             Write-Host "Skipping dev deployment for branch: $branch_name"
             exit 78
           }
+      
+      - name: Check PR name
+        shell: powershell
+        run: |
+          $pr_name=$(echo "${{ github.event.pull_request.title }}" | tr -d '[:space:]')
+          if [[ $pr_name == *-build ]]; then
+            echo "PR name has -build appended. Proceeding with the build."
+          else
+            echo "PR name does not have -build appended. Skipping the build."
+            exit 78 
+          fi
 
       - name: Checkout code repository
         uses: actions/checkout@v3
