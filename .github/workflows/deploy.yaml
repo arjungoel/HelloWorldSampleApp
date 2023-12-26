@@ -6,6 +6,7 @@ on:
   pull_request:
    types: [opened, synchronize]
 
+
 env:
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }} 
   GIT_CONFIG_EMAIL: ${{ secrets.GIT_CONFIG_EMAIL }}
