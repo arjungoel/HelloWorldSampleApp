@@ -26,6 +26,7 @@ jobs:
 
     steps:
       - name: Check Branch Name
+        shell: powershell
         run: |
           $branch_name = ${{ github.ref }}
           Write-Host $branch_name
