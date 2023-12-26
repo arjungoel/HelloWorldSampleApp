@@ -38,16 +38,16 @@ jobs:
           }
       
       - name: Check PR name
-        shell: powershell
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
         run: |
-          $pr_name=$(echo "${{ github.event.pull_request.title }}" | tr -d '[:space:]')
-          if [[ $pr_name == *-build ]]; then
-            echo "PR name has -build appended. Proceeding with the build."
+          if [[ "$TITLE" = *-build ]]; then
+          echo "PR title has 'build' appended"
+          exit 0
           else
-            echo "PR name does not have -build appended. Skipping the build."
-            exit 78 
+          echo "PR title does not have 'build' appended"
+          exit 1
           fi
-
       - name: Checkout code repository
         uses: actions/checkout@v3
 
