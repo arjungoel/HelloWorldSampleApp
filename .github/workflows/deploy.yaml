@@ -41,13 +41,14 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if [[ "$TITLE" = *-build ]]; then
+          if [[ "$TITLE" == *-build ]]; then
           echo "PR title has 'build' appended"
           exit 0
           else
           echo "PR title does not have 'build' appended"
           exit 1
           fi
+
       - name: Checkout code repository
         uses: actions/checkout@v3
 
