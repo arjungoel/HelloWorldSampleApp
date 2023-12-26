@@ -27,13 +27,21 @@ jobs:
     steps:
       - name: Check Branch Name
         run: |
-          branch_name=${{ github.ref }}
-          if [[ $branch_name == refs/heads/sprint-* ]]; then
-            echo "Deploying to dev environment for branch: $branch_name"
-          else
-            echo "Skipping dev deployment for branch: $branch_name"
+          # branch_name=${{ github.ref }}
+          # if [[ $branch_name == refs/heads/sprint-* ]]; then
+          #   echo "Deploying to dev environment for branch: $branch_name"
+          # else
+          #   echo "Skipping dev deployment for branch: $branch_name"
+          #   exit 78
+          # fi
+          $branch_name = ${{ github.ref }}
+          Write-Host $branch_name
+          if ($branch_name -match "^refs/heads/sprint-.*") {
+            Write-Host "Deploying to dev environment for branch: $branch_name"
+          } else {
+            Write-Host "Skipping dev deployment for branch: $branch_name"
             exit 78
-          fi
+          }
 
       - name: Checkout code repository
         uses: actions/checkout@v3
