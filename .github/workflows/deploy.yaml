@@ -45,7 +45,7 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if ($env:TITLE -like '*-build*') {
+          if ($env:TITLE -like '*-build') {
             Write-Output "PR title has 'build' appended"
             exit 0
           } else {
