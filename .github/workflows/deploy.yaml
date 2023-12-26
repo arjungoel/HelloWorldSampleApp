@@ -41,6 +41,7 @@ jobs:
           }
       
       - name: Check PR name
+        shell: powershell
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
